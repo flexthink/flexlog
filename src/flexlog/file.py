@@ -1,3 +1,5 @@
+"""File-based logging helpers for FlexLog."""
+
 from os import PathLike
 from pathlib import Path
 
@@ -18,9 +20,10 @@ class FlexFileTrainLogger(FileTrainLogger):
     save_file : str | PathLike
         The file to use for logging train information.
     precision : int
-        Number of decimal places to display. Default 2, example: 1.35e-5.
+        Number of decimal places to display in train information.
     progress_folder : str | PathLike | None
-        the folder where artifacts will be saved
+        Folder where image, text, and audio artifacts are saved. If not
+        provided, a ``progress`` folder next to ``save_file`` is used.
     """
     def __init__(
             self,
@@ -39,15 +42,6 @@ class FlexFileTrainLogger(FileTrainLogger):
             parents=True
         )
 
-    """Text logger of training information.
-
-    Arguments
-    ---------
-    save_file : str
-        The file to use for logging train information.
-    precision : int
-        Number of decimal places to display. Default 2, example: 1.35e-5.
-    """
     def log_image(
         self,
         key: str,
@@ -144,6 +138,22 @@ class FlexFileTrainLogger(FileTrainLogger):
         stats_meta: dict | None = None,
         stage: Stage | None = None
     ):
+        """Return the artifact folder for the given stage and metadata.
+
+        Arguments
+        ---------
+        stats_meta : dict | None
+            Optional metadata dictionary. If it contains ``"epoch"``, that
+            value is appended to the path.
+        stage : Stage | None
+            Optional SpeechBrain stage. When provided, its lowercase name is
+            appended before the epoch.
+
+        Returns
+        -------
+        Path
+            Existing folder where artifacts should be written.
+        """
         epoch = None
         if stats_meta is not None:
             epoch = stats_meta.get("epoch")

@@ -1,3 +1,5 @@
+"""Tests for the aggregate FlexTrainLogger."""
+
 import numpy as np
 from speechbrain import Stage
 from speechbrain.utils.train_logger import TrainLogger
@@ -7,6 +9,8 @@ from flexlog.flex import FlexTrainLogger
 
 
 class StatsLogger(TrainLogger):
+    """Test logger that records forwarded statistics."""
+
     def __init__(self):
         self.stats_calls = []
 
@@ -18,6 +22,7 @@ class StatsLogger(TrainLogger):
         test_stats=None,
         verbose=True,
     ):
+        """Record a statistics logging call."""
         self.stats_calls.append(
             {
                 "stats_meta": stats_meta,
@@ -30,6 +35,8 @@ class StatsLogger(TrainLogger):
 
 
 class TextLogger(StatsLogger):
+    """Test logger that records text artifact calls."""
+
     def __init__(self):
         super().__init__()
         self.text_calls = []
@@ -41,6 +48,7 @@ class TextLogger(StatsLogger):
         stats_meta=None,
         stage=None,
     ):
+        """Record a text artifact logging call."""
         self.text_calls.append(
             {
                 "key": key,
@@ -52,6 +60,8 @@ class TextLogger(StatsLogger):
 
 
 class ImageLogger(StatsLogger):
+    """Test logger that records image artifact calls."""
+
     def __init__(self):
         super().__init__()
         self.image_calls = []
@@ -63,6 +73,7 @@ class ImageLogger(StatsLogger):
         stats_meta=None,
         stage=None,
     ):
+        """Record an image artifact logging call."""
         self.image_calls.append(
             {
                 "key": key,
@@ -74,6 +85,8 @@ class ImageLogger(StatsLogger):
 
 
 class AudioLogger(StatsLogger):
+    """Test logger that records audio artifact calls."""
+
     def __init__(self):
         super().__init__()
         self.audio_calls = []
@@ -86,6 +99,7 @@ class AudioLogger(StatsLogger):
         stats_meta=None,
         stage=None,
     ):
+        """Record an audio artifact logging call."""
         self.audio_calls.append(
             {
                 "key": key,
@@ -98,6 +112,8 @@ class AudioLogger(StatsLogger):
 
 
 class RichLogger(TextLogger, ImageLogger, AudioLogger):
+    """Test logger that supports all artifact methods."""
+
     def __init__(self):
         StatsLogger.__init__(self)
         self.text_calls = []
@@ -106,6 +122,7 @@ class RichLogger(TextLogger, ImageLogger, AudioLogger):
 
 
 def test_enabled_outputs_only_returns_enabled_loggers():
+    """Only enabled outputs are returned by enabled_outputs."""
     enabled = TextLogger()
     disabled = TextLogger()
     logger = FlexTrainLogger(
@@ -117,6 +134,7 @@ def test_enabled_outputs_only_returns_enabled_loggers():
 
 
 def test_log_stats_forwards_only_to_enabled_loggers():
+    """Stats are forwarded only to enabled loggers."""
     enabled = StatsLogger()
     disabled = StatsLogger()
     logger = FlexTrainLogger(
@@ -145,6 +163,7 @@ def test_log_stats_forwards_only_to_enabled_loggers():
 
 
 def test_log_text_skips_disabled_and_unsupported_loggers():
+    """Text logging skips disabled loggers and unsupported outputs."""
     enabled_text = TextLogger()
     disabled_text = TextLogger()
     stats_only = StatsLogger()
@@ -181,6 +200,7 @@ def test_log_text_skips_disabled_and_unsupported_loggers():
 
 
 def test_artifact_methods_only_call_loggers_supporting_that_method():
+    """Artifact calls are dispatched only to loggers with matching methods."""
     rich = RichLogger()
     image_only = ImageLogger()
     audio_only = AudioLogger()
@@ -220,6 +240,7 @@ def test_artifact_methods_only_call_loggers_supporting_that_method():
 
 
 def test_callable_outputs_are_initialized():
+    """Callable output values are initialized before they are used."""
     logger = FlexTrainLogger(outputs={"text": TextLogger})
 
     output = logger.outputs["text"]

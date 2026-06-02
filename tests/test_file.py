@@ -1,3 +1,5 @@
+"""Tests for file-based FlexLog artifact logging."""
+
 from pathlib import Path
 import wave
 
@@ -10,10 +12,12 @@ from flexlog.file import FlexFileTrainLogger
 
 
 def make_logger(tmp_path: Path) -> FlexFileTrainLogger:
+    """Create a file logger rooted in a pytest temporary directory."""
     return FlexFileTrainLogger(save_file=tmp_path / "train.log")
 
 
 def test_default_progress_folder_is_next_to_save_file(tmp_path):
+    """The default progress folder is created next to the train log."""
     logger = make_logger(tmp_path)
 
     assert logger.progress_folder == tmp_path / "progress"
@@ -21,6 +25,7 @@ def test_default_progress_folder_is_next_to_save_file(tmp_path):
 
 
 def test_log_text_writes_to_stage_and_epoch_folder(tmp_path):
+    """Text artifacts are written below stage and epoch folders."""
     logger = make_logger(tmp_path)
 
     logger.log_text(
@@ -36,6 +41,7 @@ def test_log_text_writes_to_stage_and_epoch_folder(tmp_path):
 
 
 def test_log_image_writes_png_to_progress_folder(tmp_path):
+    """Image artifacts are written as readable PNG files."""
     logger = make_logger(tmp_path)
     image = np.zeros((8, 12, 3), dtype=np.uint8)
     image[:, :, 1] = 255
@@ -51,6 +57,7 @@ def test_log_image_writes_png_to_progress_folder(tmp_path):
 
 
 def test_log_audio_writes_wav_to_stage_and_epoch_folder(tmp_path):
+    """Audio artifacts are written as WAV files below stage and epoch folders."""
     logger = make_logger(tmp_path)
 
     logger.log_audio(

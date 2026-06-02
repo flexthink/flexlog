@@ -101,11 +101,11 @@ class FlexTrainLogger(TrainLogger):
     Arguments
     ---------
     outputs : dict
-        Named outputs, which can be other, possibly enhanced,
-        TrainLoggers
-    enabled : dict
-        a dictionary indicating which loggers are enabled
-        at a given time
+        Mapping of output names to logger instances or callables that create
+        logger instances.
+    enabled : dict | None
+        Optional mapping of output names to booleans. Outputs omitted from the
+        mapping are treated as disabled.
     """
     def __init__(self, outputs: dict, enabled: dict | None = None):
         self.outputs = {
@@ -117,6 +117,21 @@ class FlexTrainLogger(TrainLogger):
         self.enabled = enabled
 
     def _init_output(self, output: Any) -> TrainLogger:
+        """Return a logger instance for an output configuration.
+
+        If ``output`` is callable and is not already a ``TrainLogger``, it is
+        called with no arguments and the result is used as the logger.
+
+        Arguments
+        ---------
+        output : Any
+            Logger instance or zero-argument factory.
+
+        Returns
+        -------
+        TrainLogger
+            Initialized logger output.
+        """
         if not isinstance(output, TrainLogger) and callable(output):
             output = output()
         return output
@@ -143,6 +158,22 @@ class FlexTrainLogger(TrainLogger):
         test_stats=None,
         verbose=True,
     ):
+        """Log training statistics to every enabled output.
+
+        Arguments
+        ---------
+        stats_meta : dict
+            Metadata associated with the stats, such as epoch or learning
+            rate.
+        train_stats : dict | None
+            Training statistics to forward.
+        valid_stats : dict | None
+            Validation statistics to forward.
+        test_stats : dict | None
+            Test statistics to forward.
+        verbose : bool
+            Whether downstream loggers should also emit verbose output.
+        """
         for logger in self.enabled_outputs().values():
             logger.log_stats(
                 stats_meta,
