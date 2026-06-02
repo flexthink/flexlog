@@ -33,6 +33,62 @@ pip install "wandb>=0.16"
 
 ## Basic Usage
 
+### HyperPyYAML
+
+The intended use is to instantiate `FlexTrainLogger` from HyperPyYAML and pass
+it into your SpeechBrain training code as the train logger.
+
+```yaml
+output_folder: results/example
+logging_file_enabled: True
+logging_wandb_enabled: False
+logging_wandb_project: my_project
+logging_wandb_name: my_run
+
+train_logger: !new:flexlog.flex.FlexTrainLogger
+    outputs:
+        file: !new:flexlog.file.FlexFileTrainLogger
+            save_file: !ref <output_folder>/train_log.txt
+            progress_folder: !ref <output_folder>/progress
+
+        wandb: !new:flexlog.wandb.FlexWandBLogger
+            initializer: !name:wandb.init
+                project: !ref <logging_wandb_project>
+                name: !ref <logging_wandb_name>
+                dir: !ref <output_folder>/wandb
+                reinit: True
+                resume: allow
+
+    enabled:
+        file: !ref <logging_file_enabled>
+        wandb: !ref <logging_wandb_enabled>
+```
+
+Load it the same way as other SpeechBrain HyperPyYAML configuration:
+
+```python
+from hyperpyyaml import load_hyperpyyaml
+
+with open("hparams.yaml", encoding="utf-8") as fin:
+    hparams = load_hyperpyyaml(fin)
+
+train_logger = hparams["train_logger"]
+```
+
+The keys under `outputs` are logger names. The `enabled` mapping controls which
+outputs receive logs, so you can keep W&B configured but disabled for local
+runs. The enable flags and W&B run identifiers are top-level values so
+SpeechBrain command-line overrides can change them directly.
+
+For example:
+
+```bash
+python train.py hparams.yaml \
+    --logging_wandb_enabled=True \
+    --logging_wandb_project=my_project \
+    --logging_wandb_name=experiment_001
+```
+
 ### Aggregate Multiple Loggers
 
 ```python
