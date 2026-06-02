@@ -11,23 +11,23 @@ import torch
 
 
 class FlexFileTrainLogger(FileTrainLogger):
+    """Text logger of training information.
+
+    Arguments
+    ---------
+    save_file : str | PathLike
+        The file to use for logging train information.
+    precision : int
+        Number of decimal places to display. Default 2, example: 1.35e-5.
+    progress_folder : str | PathLike | None
+        the folder where artifacts will be saved
+    """
     def __init__(
             self,
             save_file: str | PathLike,
             precision: int = 2,
             progress_folder: str | PathLike | None = None
     ):
-        """Text logger of training information.
-
-        Arguments
-        ---------
-        save_file : str | PathLike
-            The file to use for logging train information.
-        precision : int
-            Number of decimal places to display. Default 2, example: 1.35e-5.
-        progress_folder : str | PathLike | None
-            the folder where artifacts will be saved
-        """
         super().__init__(save_file=save_file,
                          precision=precision)
         if progress_folder is None:
