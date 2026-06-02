@@ -1,6 +1,7 @@
 [project]
 name = "flexlog"
 version = "0.0.1"
+license = "Apache-2.0"
 dependencies = [
     "numpy>=1.26",
     "Pillow>=10.0",
