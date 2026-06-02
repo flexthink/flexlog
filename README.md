@@ -209,3 +209,8 @@ TORCHINDUCTOR_CACHE_DIR=$PWD/.pytest-tmp/torchinductor \
 PYTHONPATH=src pytest -p no:cacheprovider tests -q
 rm -rf .pytest-tmp
 ```
+
+## License
+
+FlexLog is licensed under the Apache License, Version 2.0. See
+[LICENSE](LICENSE).
