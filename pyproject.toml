@@ -1,0 +1,31 @@
+[project]
+name = "flexlog"
+version = "0.0.1"
+dependencies = [
+    "numpy>=1.26",
+    "Pillow>=10.0",
+    "speechbrain>=1.1.0",
+    "torch>=2.0",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=7.4",
+    "wandb>=0.16",
+]
+
+[tool.black]
+line-length = 79
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.flake8]
+exclude = "*.ipynb"
+
+[tool.pyright]
+exclude = ["**/*.ipynb", "**/__pycache__", "**/.*", "**/node_modules"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["flexlog*"]

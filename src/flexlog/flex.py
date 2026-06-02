@@ -1,0 +1,247 @@
+"""An aggregate logger with multple loggers
+
+Authors
+* Artem Ploujnikov 2026
+"""
+
+from speechbrain import Stage
+import torch
+
+from speechbrain.utils.train_logger import TrainLogger, main_process_only
+from typing import Any, Protocol, runtime_checkable
+from numpy.typing import ArrayLike
+
+
+@runtime_checkable
+class SupportsImageLog(Protocol):
+    """A protocol for image loggers"""
+    def log_image(
+        self,
+        key: str,
+        image: ArrayLike,
+        stats_meta: dict | None = None,
+        stage: Stage | None = None
+    ):
+        """Log an image artifact.
+
+        Arguments
+        ---------
+        key : str
+            Name under which the image is logged.
+        image : ArrayLike
+            Image data to log.
+        stats_meta : dict | None
+            Optional metadata dictionary. If it contains ``"epoch"``, that
+            value can be used by downstream loggers.
+        stage : Stage | None
+            Optional SpeechBrain stage associated with the logged image.
+        """
+        ...
+
+
+@runtime_checkable
+class SupportsTextLog(Protocol):
+    """A protocol for text loggers"""
+    def log_text(
+        self,
+        key: str,
+        text: str,
+        stats_meta: dict | None = None,
+        stage: Stage | None = None
+    ):
+        """Log a text artifact.
+
+        Arguments
+        ---------
+        key : str
+            Name under which the text is logged.
+        text : str
+            Text value to log.
+        stats_meta : dict | None
+            Optional metadata dictionary. If it contains ``"epoch"``, that
+            value can be used by downstream loggers.
+        stage : Stage | None
+            Optional SpeechBrain stage associated with the logged text.
+        """
+
+
+@runtime_checkable
+class SupportsAudioLog(Protocol):
+    """A protocol for audio loggers"""
+    def log_audio(
+        self,
+        key: str,
+        audio: torch.Tensor,
+        sample_rate: int = 16000,
+        stats_meta: dict | None = None,
+        stage: Stage | None = None
+    ):
+        """Log an audio artifact.
+
+        Arguments
+        ---------
+        key : str
+            Name under which the audio is logged.
+        audio : torch.Tensor
+            The waveform to log
+        sample_rate : int
+            The sample rate
+        stats_meta : dict | None
+            Optional metadata dictionary. If it contains ``"epoch"``, that
+            value can be used by downstream loggers.
+        stage : Stage | None
+            Optional SpeechBrain stage associated with the logged audio.
+        """
+
+
+class FlexTrainLogger(TrainLogger):
+    """A flexible train logger that can aggregate multiple loggers
+    together and enable/disable them on request
+
+    Arguments
+    ---------
+    outputs : dict
+        Named outputs, which can be other, possibly enhanced,
+        TrainLoggers
+    enabled : dict
+        a dictionary indicating which loggers are enabled
+        at a given time
+    """
+    def __init__(self, outputs: dict, enabled: dict | None = None):
+        self.outputs = {
+            key: self._init_output(output)
+            for key, output in outputs.items()
+        }
+        if enabled is None:
+            enabled = {key: True for key in self.outputs.keys()}
+        self.enabled = enabled
+
+    def _init_output(self, output: Any) -> TrainLogger:
+        if not isinstance(output, TrainLogger) and callable(output):
+            output = output()
+        return output
+
+    def enabled_outputs(self):
+        """Returns only enabled outputs
+
+        Returns
+        -------
+        result : dict
+            Enabled outputs"""
+        return {
+            key: output
+            for key, output in self.outputs.items()
+            if self.enabled.get(key)
+        }
+
+    @main_process_only
+    def log_stats(
+        self,
+        stats_meta,
+        train_stats=None,
+        valid_stats=None,
+        test_stats=None,
+        verbose=True,
+    ):
+        for logger in self.enabled_outputs().values():
+            logger.log_stats(
+                stats_meta,
+                train_stats=train_stats,
+                valid_stats=valid_stats,
+                test_stats=test_stats,
+                verbose=verbose
+            )
+
+    def log_image(
+        self,
+        key: str,
+        image: ArrayLike,
+        stats_meta: dict | None = None,
+        stage: Stage | None = None
+    ):
+        """Log an image artifact to all compatible outputs.
+
+        Arguments
+        ---------
+        key : str
+            Name under which the image is logged.
+        image : ArrayLike
+            Image data to log.
+        stats_meta : dict | None
+            Optional metadata dictionary. If it contains ``"epoch"``, that
+            value can be used by downstream loggers.
+        stage : Stage | None
+            Optional SpeechBrain stage associated with the logged image.
+        """
+        for logger in self.enabled_outputs().values():
+            if isinstance(logger, SupportsImageLog):
+                logger.log_image(
+                    key=key,
+                    image=image,
+                    stats_meta=stats_meta,
+                    stage=stage
+                )
+
+    def log_text(
+        self,
+        key: str,
+        text: str,
+        stats_meta: dict | None = None,
+        stage: Stage | None = None
+    ):
+        """Log a text artifact to all compatible outputs.
+
+        Arguments
+        ---------
+        key : str
+            Name under which the text is logged.
+        text : str
+            Text value to log.
+        stats_meta : dict | None
+            Optional metadata dictionary. If it contains ``"epoch"``, that
+            value can be used by downstream loggers.
+        stage : Stage | None
+            Optional SpeechBrain stage associated with the logged text.
+        """
+        for logger in self.enabled_outputs().values():
+            if isinstance(logger, SupportsTextLog):
+                logger.log_text(
+                    key=key,
+                    text=text,
+                    stats_meta=stats_meta,
+                    stage=stage
+                )
+
+    def log_audio(
+        self,
+        key: str,
+        audio: torch.Tensor,
+        sample_rate: int = 16000,
+        stats_meta: dict | None = None,
+        stage: Stage | None = None
+    ):
+        """Log an audio artifact to all compatible outputs.
+
+        Arguments
+        ---------
+        key : str
+            Name under which the audio is logged.
+        audio : torch.Tensor
+            The waveform to log
+        sample_rate : int
+            The sample rate
+        stats_meta : dict | None
+            Optional metadata dictionary. If it contains ``"epoch"``, that
+            value can be used by downstream loggers.
+        stage : Stage | None
+            Optional SpeechBrain stage associated with the logged audio.
+        """
+        for logger in self.enabled_outputs().values():
+            if isinstance(logger, SupportsAudioLog):
+                logger.log_audio(
+                    key=key,
+                    audio=audio,
+                    sample_rate=sample_rate,
+                    stats_meta=stats_meta,
+                    stage=stage
+                )
