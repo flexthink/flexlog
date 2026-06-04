@@ -4,6 +4,7 @@ from types import SimpleNamespace
 from unittest.mock import Mock
 
 import numpy as np
+import pytest
 from speechbrain import Stage
 import torch
 
@@ -18,13 +19,21 @@ def make_logger(run=None) -> FlexWandBLogger:
     return logger
 
 
-def test_log_uses_epoch_as_step():
-    """The epoch metadata is passed to W&B as the step."""
+@pytest.mark.parametrize(
+    ("stats_meta", "step"),
+    [
+        ({"epoch": 7}, 7),
+        ({"Epoch": 8}, 8),
+        ({"Epoch loaded": 9}, 9),
+    ],
+)
+def test_log_uses_speechbrain_epoch_metadata_as_step(stats_meta, step):
+    """SpeechBrain epoch metadata variants are passed to W&B as the step."""
     logger = make_logger()
 
-    logger.log({"loss": 0.25}, stats_meta={"epoch": 7})
+    logger.log({"loss": 0.25}, stats_meta=stats_meta)
     assert logger.run is not None
-    logger.run.log.assert_called_once_with({"loss": 0.25}, step=7)
+    logger.run.log.assert_called_once_with({"loss": 0.25}, step=step)
 
 
 def test_log_uses_none_step_without_epoch():

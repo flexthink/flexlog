@@ -5,6 +5,7 @@ import wave
 
 import numpy as np
 from PIL import Image
+import pytest
 from speechbrain import Stage
 import torch
 
@@ -38,6 +39,31 @@ def test_log_text_writes_to_stage_and_epoch_folder(tmp_path):
     output_path = tmp_path / "progress" / "valid" / "4" / "transcript.txt"
     assert output_path.is_file()
     assert output_path.read_text() == "hello world\n"
+
+
+@pytest.mark.parametrize(
+    ("stats_meta", "epoch_folder"),
+    [
+        ({"epoch": 4}, "4"),
+        ({"Epoch": 5}, "5"),
+        ({"Epoch loaded": 6}, "6"),
+    ],
+)
+def test_progress_folder_accepts_speechbrain_epoch_keys(
+    tmp_path,
+    stats_meta,
+    epoch_folder,
+):
+    """SpeechBrain epoch metadata variants are accepted for paths."""
+    logger = make_logger(tmp_path)
+
+    progress_folder = logger.get_progress_folder(
+        stats_meta=stats_meta,
+        stage=Stage.VALID,
+    )
+
+    assert progress_folder == tmp_path / "progress" / "valid" / epoch_folder
+    assert progress_folder.is_dir()
 
 
 def test_log_image_writes_png_to_progress_folder(tmp_path):

@@ -12,6 +12,33 @@ from typing import Any, Protocol, runtime_checkable
 from numpy.typing import ArrayLike
 
 
+EPOCH_KEYS = ("epoch", "Epoch", "Epoch loaded")
+
+
+def _get_epoch(stats_meta: dict | None = None):
+    """Return the epoch value from SpeechBrain metadata.
+
+    SpeechBrain recipes use a few different epoch metadata keys. If multiple
+    keys are present, the first key in ``EPOCH_KEYS`` wins.
+
+    Arguments
+    ---------
+    stats_meta : dict | None
+        Metadata dictionary that may contain an epoch value.
+
+    Returns
+    -------
+    object | None
+        Epoch value if present, otherwise ``None``.
+    """
+    if stats_meta is None:
+        return None
+    for key in EPOCH_KEYS:
+        if key in stats_meta:
+            return stats_meta[key]
+    return None
+
+
 @runtime_checkable
 class SupportsImageLog(Protocol):
     """A protocol for image loggers"""
@@ -31,7 +58,7 @@ class SupportsImageLog(Protocol):
         image : ArrayLike
             Image data to log.
         stats_meta : dict | None
-            Optional metadata dictionary. If it contains ``"epoch"``, that
+            Optional metadata dictionary. If it contains an epoch key, that
             value can be used by downstream loggers.
         stage : Stage | None
             Optional SpeechBrain stage associated with the logged image.
@@ -58,7 +85,7 @@ class SupportsTextLog(Protocol):
         text : str
             Text value to log.
         stats_meta : dict | None
-            Optional metadata dictionary. If it contains ``"epoch"``, that
+            Optional metadata dictionary. If it contains an epoch key, that
             value can be used by downstream loggers.
         stage : Stage | None
             Optional SpeechBrain stage associated with the logged text.
@@ -87,7 +114,7 @@ class SupportsAudioLog(Protocol):
         sample_rate : int
             The sample rate
         stats_meta : dict | None
-            Optional metadata dictionary. If it contains ``"epoch"``, that
+            Optional metadata dictionary. If it contains an epoch key, that
             value can be used by downstream loggers.
         stage : Stage | None
             Optional SpeechBrain stage associated with the logged audio.
@@ -199,7 +226,7 @@ class FlexTrainLogger(TrainLogger):
         image : ArrayLike
             Image data to log.
         stats_meta : dict | None
-            Optional metadata dictionary. If it contains ``"epoch"``, that
+            Optional metadata dictionary. If it contains an epoch key, that
             value can be used by downstream loggers.
         stage : Stage | None
             Optional SpeechBrain stage associated with the logged image.
@@ -229,7 +256,7 @@ class FlexTrainLogger(TrainLogger):
         text : str
             Text value to log.
         stats_meta : dict | None
-            Optional metadata dictionary. If it contains ``"epoch"``, that
+            Optional metadata dictionary. If it contains an epoch key, that
             value can be used by downstream loggers.
         stage : Stage | None
             Optional SpeechBrain stage associated with the logged text.
@@ -262,7 +289,7 @@ class FlexTrainLogger(TrainLogger):
         sample_rate : int
             The sample rate
         stats_meta : dict | None
-            Optional metadata dictionary. If it contains ``"epoch"``, that
+            Optional metadata dictionary. If it contains an epoch key, that
             value can be used by downstream loggers.
         stage : Stage | None
             Optional SpeechBrain stage associated with the logged audio.

@@ -11,6 +11,8 @@ from PIL import Image
 import numpy as np
 import torch
 
+from flexlog.flex import _get_epoch
+
 
 class FlexFileTrainLogger(FileTrainLogger):
     """Text logger of training information.
@@ -58,7 +60,7 @@ class FlexFileTrainLogger(FileTrainLogger):
         image : ArrayLike
             Image data to save.
         stats_meta : dict | None
-            Optional metadata dictionary. If it contains ``"epoch"``, that
+            Optional metadata dictionary. If it contains an epoch key, that
             value is added to the artifact path.
         stage : Stage | None
             Optional SpeechBrain stage. When provided, artifacts are saved
@@ -89,7 +91,7 @@ class FlexFileTrainLogger(FileTrainLogger):
         text : str
             Text value to log.
         stats_meta : dict | None
-            Optional metadata dictionary. If it contains ``"epoch"``, that
+            Optional metadata dictionary. If it contains an epoch key, that
             value is added to the artifact path.
         stage : Stage | None
             Optional SpeechBrain stage. When provided, artifacts are saved
@@ -120,7 +122,7 @@ class FlexFileTrainLogger(FileTrainLogger):
         audio : torch.Tensor
             The waveform to log
         stats_meta : dict | None
-            Optional metadata dictionary. If it contains ``"epoch"``, that
+            Optional metadata dictionary. If it contains an epoch key, that
             value is added to the artifact path.
         stage : Stage | None
             Optional SpeechBrain stage. When provided, artifacts are saved
@@ -143,7 +145,7 @@ class FlexFileTrainLogger(FileTrainLogger):
         Arguments
         ---------
         stats_meta : dict | None
-            Optional metadata dictionary. If it contains ``"epoch"``, that
+            Optional metadata dictionary. If it contains an epoch key, that
             value is appended to the path.
         stage : Stage | None
             Optional SpeechBrain stage. When provided, its lowercase name is
@@ -154,9 +156,7 @@ class FlexFileTrainLogger(FileTrainLogger):
         Path
             Existing folder where artifacts should be written.
         """
-        epoch = None
-        if stats_meta is not None:
-            epoch = stats_meta.get("epoch")
+        epoch = _get_epoch(stats_meta)
         progress_folder = self.progress_folder
         if stage is not None:
             progress_folder = progress_folder / stage.name.lower()

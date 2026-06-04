@@ -6,6 +6,8 @@ from numpy.typing import ArrayLike
 from speechbrain import Stage
 import torch
 
+from flexlog.flex import _get_epoch
+
 
 wandb = LazyModule(
     name="wandb",
@@ -32,7 +34,7 @@ class FlexWandBLogger(WandBLogger):
         image : ArrayLike
             Image data accepted by ``wandb.Image``.
         stats_meta : dict | None
-            Optional metadata dictionary. If it contains ``"epoch"``, that
+            Optional metadata dictionary. If it contains an epoch key, that
             value is used as the W&B step.
         """
         self.log(
@@ -50,7 +52,7 @@ class FlexWandBLogger(WandBLogger):
         text : str
             Text value to log.
         stats_meta : dict | None
-            Optional metadata dictionary. If it contains ``"epoch"``, that
+            Optional metadata dictionary. If it contains an epoch key, that
             value is used as the W&B step.
         """
         self.log(
@@ -77,7 +79,7 @@ class FlexWandBLogger(WandBLogger):
         sample_rate : int
             Sample rate of the waveform.
         stats_meta : dict | None
-            Optional metadata dictionary. If it contains ``"epoch"``, that
+            Optional metadata dictionary. If it contains an epoch key, that
             value is used as the W&B step.
         stage : Stage | None
             Optional SpeechBrain stage. Accepted for compatibility with other
@@ -90,7 +92,7 @@ class FlexWandBLogger(WandBLogger):
         )
 
     def log(self, values: dict, stats_meta: dict | None = None):
-        """Log values to W&B using the epoch metadata as the step.
+        """Log values to W&B using epoch metadata as the step.
 
         If no W&B run is active, logging is skipped.
 
@@ -99,14 +101,12 @@ class FlexWandBLogger(WandBLogger):
         values : dict
             Mapping of metric or artifact names to values accepted by W&B.
         stats_meta : dict | None
-            Optional metadata dictionary. If it contains ``"epoch"``, that
+            Optional metadata dictionary. If it contains an epoch key, that
             value is passed to W&B as the logging step.
         """
         if self.run is None:
             return
-        if stats_meta is None:
-            stats_meta = {}
-        step = stats_meta.get("epoch", None)
+        step = _get_epoch(stats_meta)
         self.run.log(
             values,
             step=step
