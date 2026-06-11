@@ -190,7 +190,8 @@ logger.save_image("plot", image_array, stats_meta={"epoch": 1})
 logger.log_audio("sample", audio_tensor, sample_rate=16000)
 ```
 
-For W&B logging, `stats_meta["epoch"]` is used as the W&B step when present.
+For file paths and W&B steps, FlexLog accepts the SpeechBrain epoch metadata
+keys `epoch`, `Epoch`, and `Epoch loaded`.
 
 ## Development
 

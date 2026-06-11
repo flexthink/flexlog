@@ -133,15 +133,23 @@ class FlexTrainLogger(TrainLogger):
     enabled : dict | None
         Optional mapping of output names to booleans. Outputs omitted from the
         mapping are treated as disabled.
+    runtime_toggle : bool
+        enables runtime toggling of the outputs
+
     """
-    def __init__(self, outputs: dict, enabled: dict | None = None):
-        self.outputs = {
-            key: self._init_output(output)
-            for key, output in outputs.items()
-        }
+    def __init__(
+            self,
+            outputs: dict, enabled: dict | None = None,
+            runtime_toggle: bool = False):
         if enabled is None:
             enabled = {key: True for key in self.outputs.keys()}
         self.enabled = enabled
+        self.runtime_toggle = runtime_toggle
+        self.outputs = {
+            key: self._init_output(output)
+            for key, output in outputs.items()
+            if runtime_toggle or self.enabled.get(key)
+        }
 
     def _init_output(self, output: Any) -> TrainLogger:
         """Return a logger instance for an output configuration.
