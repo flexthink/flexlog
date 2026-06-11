@@ -47,11 +47,11 @@ logging_wandb_name: my_run
 
 train_logger: !new:flexlog.flex.FlexTrainLogger
     outputs:
-        file: !new:flexlog.file.FlexFileTrainLogger
+        file: !name:flexlog.file.FlexFileTrainLogger
             save_file: !ref <output_folder>/train_log.txt
             progress_folder: !ref <output_folder>/progress
 
-        wandb: !new:flexlog.wandb.FlexWandBLogger
+        wandb: !name:flexlog.wandb.FlexWandBLogger
             initializer: !name:wandb.init
                 project: !ref <logging_wandb_project>
                 name: !ref <logging_wandb_name>
@@ -62,6 +62,7 @@ train_logger: !new:flexlog.flex.FlexTrainLogger
     enabled:
         file: !ref <logging_file_enabled>
         wandb: !ref <logging_wandb_enabled>
+    runtime_toggle: False
 ```
 
 Load it the same way as other SpeechBrain HyperPyYAML configuration:
@@ -79,6 +80,20 @@ The keys under `outputs` are logger names. The `enabled` mapping controls which
 outputs receive logs, so you can keep W&B configured but disabled for local
 runs. The enable flags and W&B run identifiers are top-level values so
 SpeechBrain command-line overrides can change them directly.
+
+`runtime_toggle` controls when outputs are initialized:
+
+- With `runtime_toggle: False` (the default), only outputs enabled when
+  `FlexTrainLogger` is created are initialized. This is useful when an output
+  requires an external provider, installed integration, account, or
+  credentials that are not available for every run.
+- With `runtime_toggle: True`, all outputs are initialized, including disabled
+  ones. You can then change the `enabled` mapping while the program is running
+  to start or stop forwarding logs without recreating the logger.
+
+To defer initialization in HyperPyYAML, define each output with `!name:` as
+shown above. Using `!new:` creates the output before `FlexTrainLogger` can
+check whether it is enabled.
 
 For example:
 
